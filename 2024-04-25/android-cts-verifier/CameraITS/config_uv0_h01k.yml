@@ -1,0 +1,20 @@
+MoblyParams:
+  LogPath: /tmp/CameraITS_av_g783j/cam_id_0/scene2_f
+TestBeds:
+- Controllers:
+    AndroidDevice:
+    - label: dut
+      serial: 33161FDJG001C8
+    - label: tablet
+      serial: R52N50KEEFP
+  Name: TEST_BED_TABLET_SCENES
+  TestParams:
+    brightness: 192
+    camera: '0'
+    chart_distance: 22.0
+    debug_mode: 'False'
+    foldable_device: 'False'
+    lighting_ch: <controller-channel>
+    lighting_cntl: <controller-type>
+    scene: scene2_f
+    scene_with_suffix: scene2_f
