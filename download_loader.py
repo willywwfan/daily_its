@@ -1,9 +1,10 @@
 import glob
 import os
-from zipfile import ZipFile
+#from zipfile import ZipFile
 from datetime import date
 import subprocess
 import yaml
+from subprocess import check_output, CalledProcessError, STDOUT
 
 class DownloadExractor():
     def __init__(self, today_folder):
@@ -15,8 +16,9 @@ class DownloadExractor():
             os.makedirs(self.today_folder)
 
     def unzip_file(self):
-        with ZipFile(self.latest_zip_file, 'r') as f:
-            f.extractall(self.today_folder)
+        #with ZipFile(self.latest_zip_file, 'r') as f:
+        #    f.extractall(self.today_folder)
+        check_output(['unzip', self.latest_zip_file, '-d', self.today_folder], stderr=STDOUT)
 
     def find_latest_zip_file(self):
         downloads_path = os.path.join("/home", os.getlogin(), "Downloads")
