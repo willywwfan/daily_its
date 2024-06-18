@@ -35,6 +35,7 @@ class ScriptInitialer():
 
         self.util_path = os.path.join(self.config_path, "utils")
         self.utils_session_py = os.path.join(self.util_path, "its_session_utils.py")
+        self.base_test_py = os.path.join(self.config_path, "tests", "its_base_test.py")
 
         self.devices = None
 
@@ -65,6 +66,34 @@ class ScriptInitialer():
         data = data.replace(error_part, 'tablet_name = "gta4lwifi"', 1)
 
         with open(self.utils_session_py, "w") as file:
+            file.writelines(data)
+
+    def fix_filepath_error(self):
+        replace_1 = "file://mnt"
+        replace_2 = "sdcard"
+
+        with open(self.utils_session_py) as file:
+            data = file.read()
+
+        data = data.replace(replace_1, "", 1)
+        data = data.replace(replace_2, "storage/emulated/0")
+
+        with open(self.utils_session_py, "w") as file:
+            file.writelines(data)
+
+    def fix_rotation_error(self):
+        replace_1 = "elif 'ROTATION_0' in landscape_val:"
+        target_1 = "elif 'ROTATION_0' in landscape_val: landscape_val = '0'"
+        replace_2 = "  landscape_val = '0'"
+        target_2 = "elif 'ROTATION_270' in landscape_val: landscape_val = '3'"
+
+        with open(self.base_test_py) as file:
+            data = file.read()
+
+        data = data.replace(replace_1, target_1, 1)
+        data = data.replace(replace_2, target_2, 1)
+
+        with open(self.base_test_py, "w") as file:
             file.writelines(data)
 
     def find_devices(self):
@@ -100,11 +129,17 @@ if __name__ == "__main__":
     DE.unzip_file()
     print("Have extracted file: " + DE.latest_zip_file + "\n")
 
+    # finding and checking target device and tablet SN number
     SI.find_devices()
     print("target device: " + SI.devices[0] + ", tablet: " + SI.devices[1])
+
+    # editing config and fixing error
     SI.edit_config()
     print("Have edited " + SI.config_file)
     SI.fix_tablet_version_error()
+    SI.fix_filepath_error()
     print("Have fixed " + SI.utils_session_py + "\n")
+    SI.fix_rotation_error()
+    print("Have fixed " + SI.base_test_py + "\n")
 
     CP.print_command(SI.devices)
