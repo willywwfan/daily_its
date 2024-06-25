@@ -3,7 +3,6 @@ import os
 #from zipfile import ZipFile
 from datetime import date
 import subprocess
-import yaml
 from subprocess import check_output, CalledProcessError, STDOUT
 
 class DownloadExractor():
@@ -38,6 +37,7 @@ class ScriptInitialer():
         self.base_test_py = os.path.join(self.config_path, "tests", "its_base_test.py")
 
         self.devices = None
+        self.tablet_name = None
 
     def edit_config(self):
         with open(self.config_file) as file:
@@ -97,12 +97,16 @@ class ScriptInitialer():
             file.writelines(data)
 
     def find_devices(self):
-        out_raw = subprocess.check_output("adb devices", stderr=subprocess.STDOUT, shell=True)
-        out_s = str(out_raw.decode('utf-8')).strip()
-        devices = out_s.split("\n")[1:]
+        devices_list_unencoded = subprocess.check_output("adb devices", stderr=subprocess.STDOUT, shell=True)
+        devices_list = str(devices_list_unencoded.decode('utf-8')).strip()
+        devices = devices_list.split("\n")[1:]
         if len(devices) != 2:
             raise ValueError(f'device number is not correct.')
         self.devices = [device.split("\t")[0] for device in devices]
+
+        get_device_name = "adb -s " + self.devices[1] + " shell getprop ro.product.device"
+        tablet_name_unencoded = subprocess.check_output(get_device_name, stderr=subprocess.STDOUT, shell=True)
+        self.tablet_name = str(tablet_name_unencoded.decode('utf-8')).strip()
 
     
 class CommandPrinter():
@@ -125,21 +129,26 @@ if __name__ == "__main__":
 
     # build folder and extract its file
     DE.build_today_folder()
-    print("Have built folder: " + DE.today_folder)
+    print("Have built folder: " + DE.today_folder + "\n")
     DE.unzip_file()
     print("Have extracted file: " + DE.latest_zip_file + "\n")
 
     # finding and checking target device and tablet SN number
     SI.find_devices()
-    print("target device: " + SI.devices[0] + ", tablet: " + SI.devices[1])
+    print("target device: " + SI.devices[0] + ", tablet: " + SI.devices[1] + ", tablet name: " + SI.tablet_name + "\n")
 
-    # editing config and fixing error
+    # editing config
     SI.edit_config()
-    print("Have edited " + SI.config_file)
-    SI.fix_tablet_version_error()
-    SI.fix_filepath_error()
-    print("Have fixed " + SI.utils_session_py + "\n")
-    SI.fix_rotation_error()
-    print("Have fixed " + SI.base_test_py + "\n")
+    print("Have edited " + SI.config_file + "\n")
 
+    # fixing error
+    if SI.tablet_name == "tangorpro":
+        SI.fix_tablet_version_error()
+        SI.fix_filepath_error()
+        print("Have fixed " + SI.utils_session_py)
+
+        SI.fix_rotation_error()
+        print("Have fixed " + SI.base_test_py + "\n")
+
+    # print commands for running all its
     CP.print_command(SI.devices)
